@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Gloock&family=Instrument+Sans:wght@400;500;600&family=Martian+Mono:wght@400;500;600&family=Yeseva+One&display=swap');
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────
+   MilestoneStake — "cobalt ledger": a playful-elegant editorial
+   escrow. Cobalt graph-paper ground, serif-italic wordmark, mono
+   telemetry. Colour = money state: green released, yellow pending,
+   red penalized. A milestone garden blooms a flower per release.
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --cobalt: #1b3ceb;
+  --cobalt-deep: #1230c2;
+  --cobalt-dark: #0d217f;
+  --grid: rgba(120, 150, 255, 0.16);
+  --paper: #f4f1e9;
+  --paper-dim: rgba(244, 241, 233, 0.62);
+  --mono-ink: #b9c4ff;
+  --green: #36e27b;
+  --yellow: #ffd23e;
+  --red: #ff5757;
+  --green-glow: rgba(54, 226, 123, 0.45);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--cobalt); }
+html, body { max-width: 100%; overflow-x: clip; }
+body {
+  background-color: var(--cobalt);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+    radial-gradient(1100px 700px at 50% 120%, var(--cobalt-deep), transparent 70%);
+  background-size: 44px 44px, 44px 44px, 100% 100%;
+  color: var(--paper);
+  font-family: 'Instrument Sans', -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+button { font-family: inherit; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+::selection { background: var(--paper); color: var(--cobalt); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--cobalt-deep); border-radius: 99px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ── type ─────────────────────────────────────────────── */
+.serif { font-family: 'Gloock', Georgia, serif; font-style: italic; font-weight: 400; letter-spacing: -0.01em; }
+.num { font-family: 'Yeseva One', Georgia, serif; font-variant-numeric: tabular-nums; }
+.mono { font-family: 'Martian Mono', monospace; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.lbl { font-family: 'Martian Mono', monospace; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mono-ink); }
+.green-t { color: var(--green); }
+.yellow-t { color: var(--yellow); }
+.red-t { color: var(--red); }
+
+/* ── nav / chrome ─────────────────────────────────────── */
+.wrap { max-width: 1280px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); }
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; gap: 16px; flex-wrap: wrap; }
+.nav-link { font-family: 'Martian Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--paper); opacity: 0.85; transition: opacity 0.14s; }
+.nav-link:hover { opacity: 1; }
+.nav-link[data-on="true"] { color: var(--yellow); opacity: 1; }
+
+/* ── buttons ──────────────────────────────────────────── */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 1.5px solid var(--paper); background: transparent; color: var(--paper); padding: 12px 22px; border-radius: 999px; font-family: 'Martian Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1; transition: transform 0.07s, background 0.16s, color 0.16s, border-color 0.16s, box-shadow 0.16s; }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn--paper { background: var(--paper); color: var(--cobalt); border-color: var(--paper); }
+.btn--paper:hover:not(:disabled) { background: #fffdf8; }
+.btn--green { background: var(--green); color: #053d1f; border-color: var(--green); box-shadow: 0 8px 28px -10px var(--green-glow); }
+.btn--green:hover:not(:disabled) { filter: brightness(1.06); }
+.btn--ghost:hover:not(:disabled) { background: rgba(244, 241, 233, 0.08); }
+.btn--sm { padding: 8px 14px; font-size: 11px; }
+.btn--block { width: 100%; }
+
+/* ── inputs ───────────────────────────────────────────── */
+.input { width: 100%; background: rgba(13, 33, 127, 0.5); border: 1.5px solid rgba(185, 196, 255, 0.3); border-radius: 10px; padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 15px; color: var(--paper); outline: none; transition: border-color 0.14s; }
+.input::placeholder { color: rgba(185, 196, 255, 0.5); }
+.input:focus { border-color: var(--yellow); }
+.input.mono { font-family: 'Martian Mono', monospace; font-size: 13px; }
+.chip { padding: 8px 14px; border: 1.5px solid rgba(185, 196, 255, 0.3); border-radius: 999px; background: transparent; color: var(--paper); font-family: 'Martian Mono', monospace; font-size: 12px; }
+.chip[data-on="true"] { background: var(--paper); border-color: var(--paper); color: var(--cobalt); }
+
+/* ── cards ────────────────────────────────────────────── */
+.card { background: rgba(13, 33, 127, 0.42); border: 1.5px solid rgba(185, 196, 255, 0.22); border-radius: 16px; }
+.card--hover { transition: transform 0.14s, border-color 0.14s, background 0.14s; cursor: pointer; }
+.card--hover:hover { transform: translateY(-3px); border-color: var(--paper); background: rgba(13, 33, 127, 0.6); }
+
+/* ── milestone garden (signature) ─────────────────────── */
+.garden { position: relative; display: flex; align-items: flex-end; gap: clamp(10px, 3vw, 34px); min-height: 230px; padding: 0 4px; border-bottom: 2px solid rgba(185, 196, 255, 0.4); }
+.stem-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 0; position: relative; }
+.flower-btn { background: transparent; border: none; padding: 0; display: flex; flex-direction: column; align-items: center; width: 100%; }
+.stem { width: 3px; background: linear-gradient(var(--green), #1e9c54); border-radius: 2px; transition: height 0.5s cubic-bezier(0.2,0.7,0.2,1); }
+.stem--pending { background: linear-gradient(rgba(185,196,255,0.5), rgba(185,196,255,0.25)); }
+.bfloom { transition: transform 0.3s; }
+@keyframes bloom { 0% { transform: scale(0.2) rotate(-20deg); opacity: 0; } 60% { transform: scale(1.25) rotate(8deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+.bloomed { animation: bloom 0.55s cubic-bezier(0.2,0.7,0.2,1) both; }
+@keyframes sway { 0%,100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+.sway { animation: sway 3.2s ease-in-out infinite; transform-origin: bottom center; }
+.glow { filter: drop-shadow(0 0 10px var(--green-glow)); }
+.flower-cap { margin-top: 8px; text-align: center; }
+
+/* floating decorative flowers */
+.deco { position: absolute; pointer-events: none; opacity: 0.9; }
+
+/* misc */
+.menu-item { display: block; width: 100%; text-align: left; padding: 11px 14px; background: transparent; border: none; border-top: 1px solid rgba(185,196,255,0.18); color: var(--paper); font-family: 'Martian Mono', monospace; font-size: 12px; letter-spacing: 0.06em; }
+.menu-item:hover { background: rgba(185,196,255,0.1); }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 300; background: var(--cobalt-dark); border: 1.5px solid rgba(185,196,255,0.4); border-radius: 999px; padding: 11px 20px; font-family: 'Martian Mono', monospace; font-size: 12px; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.rise { animation: rise 0.5s cubic-bezier(0.2,0.7,0.2,1) both; }
+.scrim { position: fixed; inset: 0; z-index: 100; background: rgba(7, 16, 60, 0.72); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; padding: 20px; overflow: auto; }
+.modal { width: min(600px, 100%); background: var(--cobalt-deep); border: 1.5px solid rgba(185,196,255,0.35); border-radius: 18px; padding: 28px; max-height: 92vh; overflow: auto; }
+
+@media (max-width: 720px) { .garden { gap: 8px; min-height: 180px; } }
