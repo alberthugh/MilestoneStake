@@ -1,61 +1,101 @@
-<h1 align="center">MilestoneStake</h1>
+# Project Charter — MilestoneStake
 
-<p align="center"><em>Escrow that blooms a milestone at a time.</em></p>
+> A control document for fixed-scope contractor engagements settled milestone-by-milestone on-chain.
+> Live instance: https://milestonestake-arc.vercel.app/
 
-<p align="center">
-  <a href="https://milestonestake-arc.vercel.app">Live app</a> ·
-  <a href="https://testnet.arcscan.app/address/0xfdB517E4deE1c17cA39196C7fB291D064C1F2CB0">Contract on ArcScan</a> ·
-  Native USDC on ARC testnet
-</p>
+| Field | Entry |
+|---|---|
+| **Document** | Engagement charter, single-pool variant |
+| **Scope** | One customer engages one named contractor for a fixed deliverable, divided into 2–6 (contract allows up to 24) milestones, each carrying a weight share of a single prepaid pool and a hard calendar deadline. |
+| **Parties** | **Customer** — funds the pool, attests delivery. **Contractor** — performs the work, draws each released share. No third signatory. |
+| **Pool** | One prepayment of native USDC, **$2–$10** in the live UI, deposited in full before any work begins. Held by contract `0xfdB517E4deE1c17cA39196C7fB291D064C1F2CB0`. The contract is neither party and takes no cut. |
+| **Settlement venue** | Arc testnet, chain `5042002`. Ledger of record: https://testnet.arcscan.app/address/0xfdB517E4deE1c17cA39196C7fB291D064C1F2CB0 |
 
 ---
 
-## What it is
+## 1. Statement of intent
 
-After 24 years managing engineering projects I know the one thing that keeps a project honest: hard checkpoints with money behind them. MilestoneStake is that, on-chain.
+Fixed-bid project work fails at the same seam every time: the customer wants proof before paying, the contractor wants assurance before working, and neither trusts the other to hold the float. This charter resolves that by escrowing the entire budget up front and metering it out one milestone at a time, on terms that no party can alter after signing. Money already in the contract is the contractor's assurance; the customer's protection is that each slice releases only on attested, on-time delivery — and that lateness costs the contractor automatically.
 
-A **customer** opens an escrow with a named **contractor** and funds a single pool of **$2–10 USDC** against **N milestones** — each with a share of the pool and a hard deadline. As work is delivered, the customer **confirms** each milestone; then anyone (a validator agent) **resolves** it:
+The arrangement is deliberately single-sided. The customer prepays the whole pool (`createEscrow` is invoked with `contractorStake = 0`); the contractor posts nothing. This is a budget-disbursement instrument, not a mutual wager.
 
-- delivered **on time** → that milestone's share is released to the contractor,
-- delivered **late** → a bounded **penalty** of the share is redirected to the customer (delay insurance), the rest still goes to the contractor,
-- **never delivered** past the deadline → the whole share refunds to the customer.
+## 2. Milestone register
 
-Every payout is **pull-based** and the pool sits in the contract — no platform, no admin, no fee, no custody. Only the two named parties (plus permissionless time-based settlement) ever move the money.
+A milestone is created with a weight in basis points and a calendar deadline. The register below is illustrative — a four-milestone, $5.00 pool at the UI default of equal weights and a 14-day cadence. Weights are assigned `floor(10000 / n)` each, with the final milestone absorbing the remainder so the shares sum to the pool to the cent (`shareOf` and the client both reconstruct this dust rule).
 
-The site is a cobalt editorial portfolio whose **milestone garden** blooms one 8-bit pixel-flower per released milestone — green for released, yellow pending, red for a penalized one.
+| Milestone | Weight | Share of $5.00 pool | Deadline | State |
+|---|---|---|---|---|
+| M1 | 2500 bps | $1.25 | day 14 | OPEN → RELEASED / PENALIZED |
+| M2 | 2500 bps | $1.25 | day 28 | OPEN |
+| M3 | 2500 bps | $1.25 | day 42 | OPEN |
+| M4 | 2500 bps | $1.25 | day 56 | OPEN |
 
-## Why it can only bloom on Arc
+Register rules enforced at `createEscrow`:
 
-A $5 pool over 5 milestones is **$1 each**; a 20% late penalty is a **$0.20** split that must pay $0.80 to the contractor and refund $0.20 to the customer. On any chain where gas is a separate volatile token this breaks twice: paying a swinging fee to move a fixed dollar is incoherent, and an autonomous validator that flags a late $1 milestone and triggers a $0.20 split would burn more gas than it moves — the agent is economically impossible. **On Arc, USDC is the gas *and* the money**: a confirm costs cents of the same dollar it releases, micro-penalty splits net positive, and always-on validator + auditor agents are profitable to run. Sub-second finality makes confirm→release feel synchronous. This isn't "a dApp that uses USDC" — cent-scale penalty splits settled by always-on agents are non-viable anywhere gas isn't the dollar.
+- Weights must total exactly **10000 bps (100%)**; each weight is in `[1, 10000]`.
+- Deadlines must be **strictly increasing** and each strictly in the future.
+- Milestone count is `[1, 24]` on-chain (the live form offers 2–6).
+- The named contractor cannot be the customer; the title is 1–80 characters.
 
-## The two agents
+Milestones resolve **strictly in sequence**. The pointer `resolved` names the only milestone currently actionable; M2 cannot be touched until M1 has left the OPEN state.
 
-- **Validator** ([`agent/validator.mjs`](agent/validator.mjs)) — permissionless deadline keeper: resolves the current milestone the moment it's confirmed or its deadline passes. No special power; if it's down, either party can resolve.
-- **Auditor** ([`agent/auditor.mjs`](agent/auditor.mjs)) — read-only: prints each escrow's released / penalty / remaining and checks the invariant `released + penalty + remaining == pool` (the same figures as the in-app ticker).
+## 3. Release logic
 
-## The contract
+Disbursement runs in two recorded steps, never one:
 
-[`MilestoneStake.sol`](contracts/MilestoneStake.sol) — one file, no owner/admin/fee/upgrade. Weights must sum to 100%, deadlines strictly increasing; the last milestone absorbs rounding dust so Σ shares == pool exactly. CEI throughout; `claim()` is the only external call (post-zeroing, reentrancy-proof). Two independent adversarial money-safety audits before deploy found **zero fund-safety issues**.
+1. **Attestation — `confirmMilestone(id, i)`.** Only the customer may call it, only on the current milestone, only while the escrow is ACTIVE. It moves no money; it stamps `confirmed = true` and records `confirmedAt`. Confirmation is a signature on the timeline, judged later.
 
-| | |
+2. **Resolution — `releaseOrPenalize(id, i)`.** Permissionless: any address may call it once the milestone is either confirmed or past deadline. It reads the timestamps and routes the share exactly one of three ways:
+
+| Condition at resolution | Outcome | Bookkeeping |
+|---|---|---|
+| Confirmed, `confirmedAt ≤ deadline` | Full share → contractor | state = RELEASED |
+| Confirmed, but `confirmedAt > deadline` | Penalty slice → customer; remainder → contractor | state = PENALIZED |
+| Never confirmed, deadline passed | Whole share refunded → customer | state = PENALIZED |
+
+Payouts are **pull-based**. Resolution credits an internal `claimable` ledger; recipients later withdraw everything owed across all their engagements with a single `claim()`. A contractor whose wallet reverts can therefore never freeze a resolution, and the contract follows checks-effects-interactions with the one external transfer placed after state is zeroed.
+
+Funding is its own gate: `fund(id)` activates the escrow only once the required side(s) are in; before activation either party may `cancel(id)` and have their deposit returned to the claim ledger, so a no-show counterparty cannot strand funds.
+
+## 4. Delay penalty
+
+Lateness is priced, not litigated. Each engagement fixes a `penaltyBps` at creation (UI default **20%**, hard-capped on-chain at **5000 bps / 50%**). When a milestone is delivered late, resolution computes `toCustomer = share * penaltyBps / 10000` and pays the contractor only `share − toCustomer`. The penalty is not a fine paid to a platform — it is rebated to the customer as delay insurance, milestone by milestone. A never-delivered milestone is the limiting case: the full share returns to the customer.
+
+Worked example on the register above, 20% penalty: an on-time M1 pays the contractor **$1.25**; an M1 delivered after day 14 pays the contractor **$1.00** and rebates **$0.25** to the customer; an abandoned M1 returns the whole **$1.25**.
+
+This is where the venue stops being incidental. The unit of account here is a sub-dollar slice and the unit of correction is a **twenty-cent rebate**. An instrument that must split twenty-five cents into a dollar payout and a quarter refund — and do it on a fixed calendar date — is only sane where the cost to execute that split is itself measured in cents of the same currency, and where finality is fast enough that confirm and release feel like one motion. Arc settles native USDC at that granularity: the fee to resolve a milestone is a few cents of the dollar being moved, not a wager on a separate volatile fee token whose price could swallow the rebate it's meant to deliver. A penalty mechanism that costs more to apply than the penalty itself is not a mechanism; metering a $5 budget into four $1.25 slices with cent-scale corrections is the specific thing that only adds up when settlement is this cheap.
+
+## 5. Governance (validator & auditor)
+
+There is no administrator. The contract has no owner, no fee switch, and no upgrade path; the customer and contractor (plus the permissionless deadline mechanic) are the only actors who can move value. Two off-chain helpers exist, both supplied as runnable scripts in [`agent/`](agent/) — **neither is a privileged or hosted service**, and the system is fully operable without them.
+
+- **Validator** — [`agent/validator.mjs`](agent/validator.mjs). A local Node process (run with `AGENT_PRIVATE_KEY` and `CONTRACT` set) that polls every 30 s, finds each ACTIVE escrow's current milestone, and calls `releaseOrPenalize` the moment it is confirmed or its deadline crosses. It holds no special key relationship — it acts on the same permissionless entrypoint any party could call. If it is offline, the customer or contractor resolves manually (the live app exposes the same action as a button). It exists so deadline-driven refunds happen on time without anyone watching the clock.
+
+- **Auditor** — [`agent/auditor.mjs`](agent/auditor.mjs). A read-only Node script. For each escrow it calls `report(id)` and prints `pool / released→contractor / penalty→customer / remaining`, then asserts the conservation invariant `released + penalty + remaining == pool`. It signs nothing and can change nothing; it is a reconciliation tool. The live page renders the same four figures as an on-page ticker.
+
+## 6. On-chain ledger
+
+| Attribute | Value |
 |---|---|
-| **Network** | ARC testnet (chain `5042002`) |
-| **Address** | [`0xfdB517E4deE1c17cA39196C7fB291D064C1F2CB0`](https://testnet.arcscan.app/address/0xfdB517E4deE1c17cA39196C7fB291D064C1F2CB0) |
-| **Compiler** | 0.8.35, optimizer 200, viaIR — verified on ArcScan |
+| Contract | `MilestoneStake.sol`, Solidity `^0.8.20`, single file |
+| Address | `0xfdB517E4deE1c17cA39196C7fB291D064C1F2CB0` |
+| Network | Arc testnet, chain id `5042002` |
+| Asset | native USDC (the chain's settlement currency) |
+| Explorer | https://testnet.arcscan.app/address/0xfdB517E4deE1c17cA39196C7fB291D064C1F2CB0 |
+| Custody | none — funds rest in the contract, withdrawn only by the credited party |
 
-## Run it locally
+Mutating entrypoints: `createEscrow`, `fund`, `confirmMilestone`, `releaseOrPenalize`, `claim`, `cancel`.
+Read surface: `getEscrow`, `milestonesOf`, `shareOf`, `report`, `claimable`, `escrowsOfCustomer`, `escrowsOfContractor`, and the aggregates `escrowCount` / `totalPool` / `totalReleased` / `totalPenalized`.
+
+## 7. Operating the instance
 
 ```bash
 npm install
-npm run dev            # http://localhost:3000
+npm run dev        # http://localhost:3000
 ```
 
-The customer/contractor act from their own wallets; the validator's resolve is permissionless (`agent/validator.mjs` from any funded key, or the in-app button).
-
-## Built with
-
-Next.js 16 · React 19 · ethers v6 · Solidity 0.8.35 · Tailwind v4 — on ARC.
+The customer and contractor each act from their own wallet on chain 5042002. Resolution is permissionless: run the validator from any funded key, or click the in-app release control. Front end built with Next.js, React, ethers v6, and Tailwind against the deployed contract above.
 
 ---
 
-<p align="center"><sub>Hard checkpoints, real money, no custody.</sub></p>
+*MilestoneStake — Albert Hughes. Pay for delivery, on the date, to the cent.*
