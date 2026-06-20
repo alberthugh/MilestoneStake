@@ -142,10 +142,10 @@ export default function Home() {
                   <div onClick={() => setWalletOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 60 }} />
                   <div className="card" style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 61, minWidth: 220, overflow: "hidden" }}>
                     <div style={{ padding: "13px 15px" }}><div className="lbl">wallet</div><div className="mono" style={{ fontSize: 13, marginTop: 5 }}>{shortAddr(account, 9, 6)}</div><div className="mono green-t" style={{ fontSize: 12, marginTop: 5 }}>{balance || "0"} USDC</div></div>
-                    {!chainOk && <button className="menu-item red-t" onClick={() => switchToArc().catch(() => {})}>switch to ARC</button>}
-                    {claimable > 0n && <button className="menu-item green-t" onClick={() => { setWalletOpen(false); doClaim(); }}>claim {fmtUsdc(claimable)} USDC</button>}
-                    <a className="menu-item" href={`${ARCSCAN}/address/${account}`} target="_blank" rel="noopener noreferrer">arcscan ↗</a>
-                    <button className="menu-item" onClick={() => { setWalletOpen(false); disconnect(); }}>disconnect</button>
+                    {!chainOk && <button className="ledger-line red-t" onClick={() => switchToArc().catch(() => {})}>switch to ARC</button>}
+                    {claimable > 0n && <button className="ledger-line green-t" onClick={() => { setWalletOpen(false); doClaim(); }}>claim {fmtUsdc(claimable)} USDC</button>}
+                    <a className="ledger-line" href={`${ARCSCAN}/address/${account}`} target="_blank" rel="noopener noreferrer">arcscan ↗</a>
+                    <button className="ledger-line" onClick={() => { setWalletOpen(false); disconnect(); }}>disconnect</button>
                   </div>
                 </>)}
               </div>
@@ -257,7 +257,7 @@ export default function Home() {
       {/* create modal */}
       {open && (
         <div className="scrim" onClick={() => setOpen(false)}>
-          <div className="modal rise" onClick={(e) => e.stopPropagation()}>
+          <div className="modal sprout" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
               <h2 className="serif" style={{ fontSize: 34 }}>new escrow</h2>
               <button onClick={() => setOpen(false)} className="btn btn--ghost btn--sm">✕</button>
@@ -295,7 +295,7 @@ export default function Home() {
         </div>
       )}
 
-      {toast && <div className="toast rise" style={{ color: toast.startsWith("✓") ? "var(--green)" : toast.startsWith("✗") ? "var(--red)" : "var(--paper)" }}>{toast}</div>}
+      {toast && <div className="toast sprout" style={{ color: toast.startsWith("✓") ? "var(--green)" : toast.startsWith("✗") ? "var(--red)" : "var(--paper)" }}>{toast}</div>}
     </div>
   );
 }

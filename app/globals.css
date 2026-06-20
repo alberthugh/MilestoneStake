@@ -47,7 +47,7 @@ a { color: inherit; text-decoration: none; }
 .serif { font-family: 'Gloock', Georgia, serif; font-style: italic; font-weight: 400; letter-spacing: -0.01em; }
 .num { font-family: 'Yeseva One', Georgia, serif; font-variant-numeric: tabular-nums; }
 .mono { font-family: 'Martian Mono', monospace; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
-.lbl { font-family: 'Martian Mono', monospace; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mono-ink); }
+.lbl { font-family: 'Martian Mono', monospace; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--mono-ink); }
 .green-t { color: var(--green); }
 .yellow-t { color: var(--yellow); }
 .red-t { color: var(--red); }
@@ -102,11 +102,12 @@ a { color: inherit; text-decoration: none; }
 .deco { position: absolute; pointer-events: none; opacity: 0.9; }
 
 /* misc */
-.menu-item { display: block; width: 100%; text-align: left; padding: 11px 14px; background: transparent; border: none; border-top: 1px solid rgba(185,196,255,0.18); color: var(--paper); font-family: 'Martian Mono', monospace; font-size: 12px; letter-spacing: 0.06em; }
-.menu-item:hover { background: rgba(185,196,255,0.1); }
+/* wallet dropdown row — a ledger entry line */
+.ledger-line { display: block; width: 100%; text-align: left; padding: 11px 15px; background: transparent; border: none; border-top: 1px solid rgba(185,196,255,0.18); color: var(--paper); font-family: 'Martian Mono', monospace; font-size: 12px; letter-spacing: 0.03em; transition: background 0.14s, box-shadow 0.14s; }
+.ledger-line:hover { background: rgba(185,196,255,0.1); box-shadow: inset 3px 0 0 0 var(--yellow); }
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 300; background: var(--cobalt-dark); border: 1.5px solid rgba(185,196,255,0.4); border-radius: 999px; padding: 11px 20px; font-family: 'Martian Mono', monospace; font-size: 12px; }
-@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.rise { animation: rise 0.5s cubic-bezier(0.2,0.7,0.2,1) both; }
+@keyframes sprout { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.sprout { animation: sprout 0.5s cubic-bezier(0.2,0.7,0.2,1) both; }
 .scrim { position: fixed; inset: 0; z-index: 100; background: rgba(7, 16, 60, 0.72); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; padding: 20px; overflow: auto; }
 .modal { width: min(600px, 100%); background: var(--cobalt-deep); border: 1.5px solid rgba(185,196,255,0.35); border-radius: 18px; padding: 28px; max-height: 92vh; overflow: auto; }
 
