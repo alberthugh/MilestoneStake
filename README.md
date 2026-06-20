@@ -3,6 +3,8 @@
 > A control document for fixed-scope contractor engagements settled milestone-by-milestone on-chain.
 > Live instance: https://milestonestake-arc.vercel.app/
 
+![The milestone garden — one stem per milestone, blooming green on release, amber while pending, red when penalized, over cobalt graph-paper](docs/diagram.svg)
+
 | Field | Entry |
 |---|---|
 | **Document** | Engagement charter, single-pool variant |
